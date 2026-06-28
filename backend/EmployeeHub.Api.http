@@ -1,0 +1,39 @@
+@EmployeeHub.Api_HostAddress = http://localhost:5217
+@Token = paste-jwt-token-here
+
+# EmployeeHub.Api.http lets beginners test API endpoints directly from an editor.
+# Start with the health endpoint because it does not need SQL Server or JWT auth.
+GET {{EmployeeHub.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+# Register a user and copy the token from the response.
+POST {{EmployeeHub.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Demo User",
+  "email": "demo@example.com",
+  "password": "Password@123"
+}
+
+###
+
+# Login with the seeded Docker demo user.
+POST {{EmployeeHub.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@employeehub.local",
+  "password": "Admin@123"
+}
+
+###
+
+# Use the JWT token from login/register to call protected employee endpoints.
+GET {{EmployeeHub.Api_HostAddress}}/api/employees
+Authorization: Bearer {{Token}}
+Accept: application/json
+
+###

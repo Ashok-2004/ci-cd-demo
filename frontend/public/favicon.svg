@@ -1,0 +1,8 @@
+<!--
+  favicon.svg is the small browser-tab icon for the React app.
+  It exists so the frontend has project-specific branding instead of the default Vite icon.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="EmployeeHub">
+  <rect width="48" height="48" rx="8" fill="#0f172a" />
+  <path d="M13 14h22v5H19v4h14v5H19v5h16v5H13z" fill="#38bdf8" />
+</svg>

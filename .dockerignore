@@ -1,0 +1,17 @@
+# Keep Git metadata out of Docker build contexts.
+.git
+
+# Keep frontend dependencies and build output out of Docker images.
+frontend/node_modules
+frontend/dist
+
+# Keep .NET generated files out of Docker images.
+backend/bin
+backend/obj
+backend.Tests/bin
+backend.Tests/obj
+
+# Keep local logs and environment files out of Docker images.
+*.log
+.env
+.env.*

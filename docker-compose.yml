@@ -1,0 +1,65 @@
+# docker-compose.yml runs the complete demo stack on one machine.
+# It starts SQL Server, the ASP.NET Core API, and the React frontend together.
+
+services:
+  # sqlserver is the database used by Entity Framework Core.
+  sqlserver:
+    # Use Microsoft's SQL Server 2022 Linux container image.
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Give the container a readable name for demos and troubleshooting.
+    container_name: employeehub-sqlserver
+    # Accept the SQL Server license and set the local SA password.
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+    # Map host port 1433 to container port 1433 so local tools can connect.
+    ports:
+      - "1433:1433"
+    # Store SQL Server data in a named Docker volume so data survives container restarts.
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  # backend is the ASP.NET Core Web API.
+  backend:
+    # Build the backend image from the backend Dockerfile.
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    # Give the API container a readable name.
+    container_name: employeehub-api
+    # Wait for the SQL Server container to start before starting the API container.
+    depends_on:
+      - sqlserver
+    # Configure ASP.NET Core, SQL Server, and JWT settings with environment variables.
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=EmployeeHubDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True;"
+      Jwt__Issuer: "EmployeeHubDemo"
+      Jwt__Audience: "EmployeeHubDemoClient"
+      Jwt__Secret: "EmployeeHubDemo_DockerSecretKey_ChangeMe123456789"
+      Jwt__ExpirationMinutes: "60"
+    # Map host port 5217 to container port 8080 so React can call the API.
+    ports:
+      - "5217:8080"
+
+  # frontend is the React application served by Nginx.
+  frontend:
+    # Build the frontend image from the frontend Dockerfile.
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "http://localhost:5217"
+    # Give the frontend container a readable name.
+    container_name: employeehub-frontend
+    # Start the API container before the frontend container.
+    depends_on:
+      - backend
+    # Map host port 5173 to Nginx port 80 so the app opens at localhost:5173.
+    ports:
+      - "5173:80"
+
+# Named volumes are managed by Docker and persist data outside individual containers.
+volumes:
+  sqlserver-data:

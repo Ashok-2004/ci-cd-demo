@@ -1,0 +1,110 @@
+# ci-cd.yml demonstrates a complete beginner-friendly CI/CD pipeline.
+# CI means we build and test every change.
+# CD means we package build outputs so they are ready to deploy.
+
+name: EmployeeHub Demo CI/CD
+
+# Run this workflow when code is pushed to main or when a pull request targets main.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# The workflow has one job that runs all build, test, Docker, and artifact steps.
+jobs:
+  build-test-package:
+    # Use a fresh Ubuntu runner hosted by GitHub.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout Repository
+      # This downloads your repository code into the GitHub Actions runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup .NET SDK
+      # This installs .NET 9 so the ASP.NET Core API and xUnit tests can build.
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      # Step 3: Restore NuGet Packages
+      # This downloads backend dependencies such as EF Core, JWT auth, and Swagger.
+      - name: Restore backend packages
+        run: |
+          dotnet restore backend/EmployeeHub.Api.csproj
+          dotnet restore backend.Tests/EmployeeHub.Api.Tests.csproj
+
+      # Step 4: Build Backend
+      # This compiles the ASP.NET Core API in Release mode.
+      - name: Build backend
+        run: dotnet build backend/EmployeeHub.Api.csproj --configuration Release --no-restore
+
+      # Step 5: Run Backend Tests
+      # This runs xUnit tests so backend changes are validated automatically.
+      - name: Run backend tests
+        run: dotnet test backend.Tests/EmployeeHub.Api.Tests.csproj --configuration Release --no-restore
+
+      # Step 6: Setup Node.js
+      # This installs Node.js so GitHub Actions can build and test the React app.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Step 7: Install Frontend Packages
+      # npm ci installs exact versions from package-lock.json for repeatable builds.
+      - name: Install frontend packages
+        working-directory: frontend
+        run: npm ci
+
+      # Step 8: Run Frontend Tests
+      # This runs Vitest tests for React components and frontend behavior.
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+      # Step 9: Build React App
+      # This creates production-ready static files in frontend/dist.
+      - name: Build React app
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:5217
+
+      # Step 10: Build Docker Images
+      # This confirms that both backend and frontend containers can be built.
+      - name: Build backend Docker image
+        run: docker build -f backend/Dockerfile -t employeehub-api:ci .
+
+      # Step 10 continued: Build the frontend Docker image.
+      # The React image receives the API URL as a build argument.
+      - name: Build frontend Docker image
+        run: docker build -f frontend/Dockerfile -t employeehub-frontend:ci --build-arg VITE_API_BASE_URL=http://localhost:5217 frontend
+
+      # CD preparation: Publish backend output.
+      # This packages compiled API files as deployable build output.
+      - name: Publish backend artifact folder
+        run: dotnet publish backend/EmployeeHub.Api.csproj --configuration Release --output artifacts/backend
+
+      # Step 11: Upload Build Artifacts
+      # This uploads backend publish output and React dist output for download from the workflow run.
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: employeehub-backend
+          path: artifacts/backend
+
+      # Step 11 continued: Upload React build output.
+      # This proves the frontend is packaged and ready for deployment.
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: employeehub-frontend
+          path: frontend/dist

@@ -1,0 +1,10 @@
+# Keep dependencies out of the frontend Docker build context.
+node_modules
+
+# Keep local Vite build output out of the image; Docker builds it fresh.
+dist
+
+# Keep logs and environment files out of the image.
+*.log
+.env
+.env.*

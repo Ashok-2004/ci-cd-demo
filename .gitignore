@@ -1,0 +1,21 @@
+# Root .gitignore keeps generated files out of Git.
+# Source code, documentation, and configuration stay tracked; build outputs and dependencies are recreated by tools.
+
+# .NET build output
+bin/
+obj/
+
+# Frontend dependencies and build output
+node_modules/
+dist/
+
+# Local environment files
+.env
+.env.*
+
+# Editor and OS files
+.vs/
+.vscode/
+*.user
+Thumbs.db
+Desktop.ini
