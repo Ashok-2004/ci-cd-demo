@@ -56,9 +56,10 @@ services:
     # Start the API container before the frontend container.
     depends_on:
       - backend
-    # Map host port 5173 to Nginx port 80 so the app opens at localhost:5173.
+    # Map host port 5174 to Nginx port 80.
+    # Port 5173 is often used by local Vite, so Docker uses 5174 to avoid conflicts.
     ports:
-      - "5173:80"
+      - "5174:80"
 
 # Named volumes are managed by Docker and persist data outside individual containers.
 volumes:

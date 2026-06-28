@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { LogOut, RefreshCw, Search, Users } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { EmployeeForm } from '../components/EmployeeForm'
@@ -49,26 +50,38 @@ export function DashboardPage({ auth, onLogout }: DashboardPageProps) {
       setSummary(dashboardResponse)
       setEmployees(employeesResponse)
     } catch {
-      setError('Could not load employees. Confirm the ASP.NET Core API and SQL Server are running.')
+      setError('Could not load employees. Confirm the ASP.NET Core API and SQL Server are running, then refresh the page.')
     } finally {
       setIsLoading(false)
     }
   }
 
   async function handleSubmit(employee: EmployeeInput) {
-    if (selectedEmployee) {
-      await employeeService.updateEmployee(selectedEmployee.id, employee)
-      setSelectedEmployee(null)
-    } else {
-      await employeeService.createEmployee(employee)
-    }
+    setError('')
 
-    await loadData()
+    try {
+      if (selectedEmployee) {
+        await employeeService.updateEmployee(selectedEmployee.id, employee)
+        setSelectedEmployee(null)
+      } else {
+        await employeeService.createEmployee(employee)
+      }
+
+      await loadData()
+    } catch (exception) {
+      setError(getErrorMessage(exception))
+    }
   }
 
   async function handleDelete(employee: Employee) {
-    await employeeService.deleteEmployee(employee.id)
-    await loadData()
+    setError('')
+
+    try {
+      await employeeService.deleteEmployee(employee.id)
+      await loadData()
+    } catch (exception) {
+      setError(getErrorMessage(exception))
+    }
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -162,4 +175,16 @@ export function DashboardPage({ auth, onLogout }: DashboardPageProps) {
       </section>
     </main>
   )
+}
+
+function getErrorMessage(exception: unknown) {
+  if (axios.isAxiosError<{ message?: string }>(exception)) {
+    if (exception.response?.status === 401) {
+      return 'Your login token is not valid anymore. Click Logout, then login again.'
+    }
+
+    return exception.response?.data?.message ?? 'The API request failed. Check the backend logs for details.'
+  }
+
+  return 'Something went wrong while saving employee data.'
 }

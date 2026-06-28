@@ -143,7 +143,7 @@ flowchart LR
     Backend --> Database["SQL Server container"]
 ```
 
-The frontend runs on `http://localhost:5173`.
+The Docker frontend runs on `http://localhost:5174`.
 
 The backend runs on `http://localhost:5217`.
 
@@ -219,7 +219,7 @@ docker compose up --build
 Open:
 
 ```text
-http://localhost:5173
+http://localhost:5174
 ```
 
 Backend Swagger:

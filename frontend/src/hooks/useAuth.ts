@@ -20,7 +20,17 @@ const storageKey = 'employeehub.auth'
 export function useAuth() {
   const [auth, setAuth] = useState<AuthResponse | null>(() => {
     const storedAuth = localStorage.getItem(storageKey)
-    return storedAuth ? (JSON.parse(storedAuth) as AuthResponse) : null
+
+    if (!storedAuth) {
+      return null
+    }
+
+    const parsedAuth = JSON.parse(storedAuth) as AuthResponse
+
+    // Attach the token immediately so the dashboard can load data right after refresh.
+    setAuthToken(parsedAuth.token)
+
+    return parsedAuth
   })
 
   useEffect(() => {
@@ -30,12 +40,14 @@ export function useAuth() {
   async function login(request: LoginRequest) {
     const response = await authService.login(request)
     localStorage.setItem(storageKey, JSON.stringify(response))
+    setAuthToken(response.token)
     setAuth(response)
   }
 
   async function register(request: RegisterRequest) {
     const response = await authService.register(request)
     localStorage.setItem(storageKey, JSON.stringify(response))
+    setAuthToken(response.token)
     setAuth(response)
   }
 
