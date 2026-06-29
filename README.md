@@ -1,10 +1,10 @@
-# EmployeeHub Demo
+# EmployeeHub Demo Project
 
 EmployeeHub Demo is a small employee management application built to teach ASP.NET Core, React, Docker, and GitHub Actions through a complete CI/CD workflow.
 
 The goal is not production complexity. The goal is a clear project that a beginner can understand, run, test, containerize, and explain in a CI/CD presentation.
 
-## 1. Project Overview
+## 1. Project Overview CI/CD
 
 EmployeeHub Demo contains:
 
